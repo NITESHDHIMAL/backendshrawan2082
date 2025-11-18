@@ -57,7 +57,7 @@ app.post('/product', upload.single("image") ,async (req, res) => {
 
 
 
-app.listen(process.env.BASE_URL, () => {
-  console.log(`Server started on port: ${process.env.BASE_URL}`)
+app.listen(process.env.PORT, () => {
+  console.log(`Server started on port: ${process.env.PORT}`)
 })
 
