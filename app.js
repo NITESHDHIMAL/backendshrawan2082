@@ -3,8 +3,8 @@ const express = require('express')
 const mongodbConnect = require('./database')
 const Product = require('./model/productModel')
 const upload = require('./middleware/multerConfig')
-const User = require('./model/userModel')
-console.log(process.env)
+const User = require('./model/userModel') 
+const jwt = require('jsonwebtoken')
 
 mongodbConnect()
 const app = express()
@@ -102,26 +102,68 @@ app.post("/register", async (req, res) => {
 
   const { name, email, password } = req.body
 
-  const user = new User({
-    name,
-    email,
-    password,
-  })
+  try {
+    let user = await User.findOne({ email })
+    if (user) {
+      return res.status(400).json({
+        message: "User already exists."
+      })
+    }
 
-  await user.save()
+    user = new User({
+      name,
+      email,
+      password,
+    })
 
+    await user.save()
 
-  res.status(201).json({
-    message: "User registered successfully.",
-    data: user
-  })
-
+    res.status(201).json({
+      message: "User registered successfully.",
+      data: user
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error",
+      error: error.message
+    })
+  }
 })
 
+// login a user and generate a JWT 
 
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid user email." })
+    }
 
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Invalid user password"
+      })
+    }
 
+    // generate a jwt 
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" })
 
+    res.json({
+      message: "Login Successfully.",
+      token: token
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error",
+      error: error.message
+    })
+  }
+})
 
 
 
