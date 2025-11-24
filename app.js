@@ -10,8 +10,11 @@ mongodbConnect()
 const app = express()
 app.use(express.json())
 
+
+const protectroute = require("./authMiddleware")
+
 // all data get 
-app.get('/product', async (req, res) => {
+app.get('/product',protectroute, async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
 
